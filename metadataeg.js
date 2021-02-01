@@ -98,3 +98,29 @@ const metadata = {
     },
     chapters: []
   }
+
+const merge = {
+  id : "12345676432",
+  videos: [
+    {
+      name: '1344-abc.mp4',
+      operations: [
+        {
+          name: "TRIM_VIDEO",
+          start: 0,
+          duration: 5
+        }
+      ]
+    },
+    {
+      name: '1355-cde.mp4',
+      operations: [
+        {
+          name: "TRIM_VIDEO",
+          start: 10,
+          duration: 5
+        }
+      ]
+    }
+  ]
+}

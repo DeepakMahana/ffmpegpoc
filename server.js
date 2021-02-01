@@ -51,7 +51,7 @@ app.use('/editor', editor);
 
 // app.use('*', (req, res) => responseUtil(res, false, 'Not Found!', true, {}, 404));
 
-app.listen(3000, () => {
-console.log(`Server listening on: 3000`);
+app.listen(4000, () => {
+console.log(`Server listening on: 4000`);
 });
 
