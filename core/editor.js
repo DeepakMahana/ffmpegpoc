@@ -4,6 +4,8 @@ const path = require('path');
 const os = require('os');
 const ffmpegUtil = require('../utils/ffmpeg');
 const azureUtils = require('../utils/azure');
+const Ffmpeg = require('fluent-ffmpeg');
+const e = require('express');
 
 const getId = () => {
     let uuid = uuidv4();
@@ -48,6 +50,38 @@ const fetchVideoThumbnails = async (processId, videopath, filename) => {
     return response;
 }
 
+const processVideos = async (id, videopath, videos) => {
+    let trimVideoPromises = []
+    // Validate Video/Start/End Params
+    for(let video of videos){
+      let file = path.join(videopath, video.name);
+      if(!fs.existsSync(file)) throw new Error(`${video.name} file not found to process`)
+      for(let ops of video.operations){
+        if(ops.name == "TRIM_VIDEO"){
+          if(isNaN(ops.start) || isNaN(ops.duration)) throw new Error(`${video.name} trim parameters are invalid`)
+          trimVideoPromises.push(ffmpegUtil.trimVideo(videopath, file, ops.start, ops.duration))
+        }
+      }
+    }
+    // Trim
+    let trimRes = await Promise.all(trimVideoPromises).catch(err => {
+      console.log(err)
+      throw new Error(`Failed to Trim Video`)
+    })
+    // Merge
+    let finalout = await ffmpegUtil.mergeVideos(trimRes, videopath).catch(err => {
+      console.log(err)
+      throw new Error(`Failed to Merge Video`)
+    });
+    // Upload
+    let {container, blobname} = await uploadToAzureCloud('video', id, finalout, videopath)
+    let videoPublicUrl = await azureUtils.generatePublicURLWithToken(container, blobname)
+    return {
+      video: finalout,
+      videourl: videoPublicUrl
+    };
+}
+
 const uploadToAzureCloud = (type, processId, filename, filepath) => {
   return new Promise((resolve, reject) => {
     console.log(`Uploading video file to Azure Blob Storage! Video ID: ${processId}`);
@@ -74,5 +108,6 @@ const uploadToAzureCloud = (type, processId, filename, filepath) => {
 
 module.exports = {
     getId,
-    fetchVideoThumbnails
+    fetchVideoThumbnails,
+    processVideos
 }

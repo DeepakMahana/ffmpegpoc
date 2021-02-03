@@ -15,4 +15,8 @@ router.post('/videothumbnail', (req, res) => {
     })
 })
 
+router.post('/videoedit', async(req, res) => {
+    await VideoEditValidator.getFinalVideo(req, res)
+})
+
 module.exports = router;

@@ -1,3 +1,4 @@
+const path = require('path');
 const ffmpeg = require('fluent-ffmpeg');
 const videoFile = './testvideo.mp4';
 const logo = './news18logo.png';
@@ -13,14 +14,16 @@ const getFileMetadata = (file) => {
 }
 
 // Trim the video
-const trimVideo = (file, starttime, duration) => {
+const trimVideo = (outputpath, file, starttime, duration) => {
     let outputFilename = `trim_video_${(new Date().valueOf())}.mp4`
+    console.log(outputFilename);
+    let output = path.join(outputpath, outputFilename);
     return new Promise((resolve, reject) => {
         ffmpeg()
             .input(file)
             .inputOptions([`-ss ${starttime}`])
             .outputOptions([`-t ${duration}`])
-            .output(outputFilename)
+            .output(output)
             .on('progress', (progress) => {
                 console.log(`Processing ${outputFilename}: ${parseInt(progress.percent)} % done`);
             })
@@ -37,12 +40,14 @@ const trimVideo = (file, starttime, duration) => {
 }
 
 // Merge Videos
-const mergeVideos = (filesName) => {
+const mergeVideos = (filesName, outputPath) => {
     let merged_video = ffmpeg();
-    let finalOutputFile = `final_out.mp4`
+    let finalOutputFile = `finalout_${new Date().valueOf()}.mp4`
+    let finalOutputPath = path.join(outputPath, finalOutputFile);
     return new Promise((resolve, reject) => {
         filesName.forEach((video) => {
-            merged_video = merged_video.addInput(video);
+            let fullPath = path.join(outputPath, video);
+            merged_video = merged_video.addInput(fullPath);
         })
         merged_video
             .on('progress', (progress) => {
@@ -56,7 +61,7 @@ const mergeVideos = (filesName) => {
                 console.log(`Error while Merging: ${err}`)
                 reject(`Failed to Merge the video`)
             })
-            .mergeToFile(finalOutputFile);
+            .mergeToFile(finalOutputPath);
     })
 }
 
@@ -169,5 +174,7 @@ const EditVideos = async () => {
 
 module.exports = {
     getFileMetadata,
-    getThumbnail
+    getThumbnail,
+    trimVideo,
+    mergeVideos
 };
