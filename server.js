@@ -51,7 +51,7 @@ app.use('/editor', editor);
 
 // app.use('*', (req, res) => responseUtil(res, false, 'Not Found!', true, {}, 404));
 
-const PORT = 3000;
+const PORT = 4000;
 app.listen(PORT, () => {
 console.log(`Server listening on: ${PORT}`);
 });

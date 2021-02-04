@@ -25,9 +25,11 @@ const fetchVideoThumbnails = async (processId, videopath, filename) => {
     let noOfThumnails = 10;
     let thumbnailsPerSecond = Math.floor(videoDuration / noOfThumnails);
     let thumbDurationArr = [];
-    for(let i=0; i<=videoDuration; i+=thumbnailsPerSecond){
+    for(let i=1; i<videoDuration; i+=thumbnailsPerSecond){
         thumbDurationArr.push(i)
     }
+    thumbDurationArr.length = 10;
+    console.log(thumbDurationArr)
     // Get Thumbnails of specified seconds
     let thumbnails = await ffmpegUtil.getThumbnail(videopath, videofile, thumbDurationArr, filename.split('.').slice(0,-1).join('.'))
     if(!Array.isArray(thumbnails)) throw new Error(thumbnails)

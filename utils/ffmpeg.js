@@ -23,6 +23,8 @@ const trimVideo = (outputpath, file, starttime, duration) => {
             .input(file)
             .inputOptions([`-ss ${starttime}`])
             .outputOptions([`-t ${duration}`])
+            .setAspect("16:9")
+            .size("720x480")
             .output(output)
             .on('progress', (progress) => {
                 console.log(`Processing ${outputFilename}: ${parseInt(progress.percent)} % done`);
@@ -40,15 +42,19 @@ const trimVideo = (outputpath, file, starttime, duration) => {
 }
 
 // Merge Videos
-const mergeVideos = (filesName, outputPath) => {
+const mergeVideos = async (filesName, outputPath) => {
     let merged_video = ffmpeg();
     let finalOutputFile = `finalout_${new Date().valueOf()}.mp4`
     let finalOutputPath = path.join(outputPath, finalOutputFile);
+    let inputTsFiles = [];
+    for(let video of filesName){
+        let fullPath = path.join(outputPath, video);
+        let tmpFile = fullPath.split('.').slice(0, -1).join('.') + ".ts";
+        let tmpRes = await createTemp(fullPath, tmpFile);
+        inputTsFiles.push(tmpRes);
+    }
     return new Promise((resolve, reject) => {
-        filesName.forEach((video) => {
-            let fullPath = path.join(outputPath, video);
-            merged_video = merged_video.addInput(fullPath);
-        })
+        let inputNamesFormatted = 'concat:' + inputTsFiles.join('|')
         merged_video
             .on('progress', (progress) => {
                 console.log(`Processing ${finalOutputFile}: ${parseInt(progress.percent % 100)} % done`);
@@ -61,7 +67,37 @@ const mergeVideos = (filesName, outputPath) => {
                 console.log(`Error while Merging: ${err}`)
                 reject(`Failed to Merge the video`)
             })
-            .mergeToFile(finalOutputPath);
+            .input(inputNamesFormatted)
+            .output(finalOutputPath)
+            .outputOption('-strict -2')     // I have an issue with experimental codecs, it is a solution
+            .outputOption('-bsf:a aac_adtstoasc')
+            .videoCodec('copy')
+            .run();
+    })
+}
+
+const createTemp = (input, tmpFile) => {
+    return new Promise((resolve, reject) => {
+        let cmd = ffmpeg();
+        cmd
+        .on('end', function() {
+            console.log('Completed');
+            resolve(tmpFile)
+        })
+        .on('progress', function(progress) {
+            console.log(`Processing ${tmpFile}: ${progress.percent} % done`);
+        })
+        .on('error', (err) => {
+            console.log(`Error while Merging: ${err}`)
+            reject(`Failed to Merge the video`)
+        })
+        .input(input)
+        .output(tmpFile)
+        .videoCodec('copy')
+        .audioCodec('copy')
+        .outputOptions('-bsf:v h264_mp4toannexb')
+        .outputOptions('-f mpegts')
+        .run();
     })
 }
 
