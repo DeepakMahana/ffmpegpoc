@@ -44,8 +44,28 @@ const getFinalVideo = async(req, res) => {
     }
 }
 
+const mergeVideos = async(req, res) => {
+    try{
+        if(
+            !req.files.intro[0] || 
+            !req.files.video[0] || 
+            !req.files.outro[0] || 
+            !req.body.id
+        ) responseUtil(res, false, "Some video failed to upload", true, {})
+        let id = req.body.id
+        let intro = req.files.intro[0]
+        let video = req.files.video[0]
+        let outro = req.files.outro[0]
+        let finalout = await Editor.mergeVideos(id, intro, video, outro)
+        responseUtil(res, true, 'Message', false, {id, finalout})
+    }catch(err){
+        responseUtil(res, false, err, true, {})
+    }
+}
+
 module.exports = {
     validateCreateVideoID,
     getVideoThumbnails,
-    getFinalVideo
+    getFinalVideo,
+    mergeVideos
 }

@@ -19,4 +19,24 @@ router.post('/videoedit', async(req, res) => {
     await VideoEditValidator.getFinalVideo(req, res)
 })
 
+router.post('/mergevideos', async(req, res) => {
+    multer.fields([
+        {
+            name: 'intro',
+            maxCount: 1
+        },
+        {
+            name: 'video',
+            maxCount: 1
+        },
+        {
+            name: 'outro',
+            maxCount: 1
+        }
+    ]) (req, res, async(err) => {
+        if (err || !req.files) return responseUtil(res, false, 'Failed to upload Videos', true, {err: err})
+        await VideoEditValidator.mergeVideos(req, res)
+    })
+})
+
 module.exports = router;

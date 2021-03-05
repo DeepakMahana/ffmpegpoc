@@ -6,6 +6,7 @@ const ffmpegUtil = require('../utils/ffmpeg');
 const azureUtils = require('../utils/azure');
 const Ffmpeg = require('fluent-ffmpeg');
 const e = require('express');
+const { Console } = require('console');
 
 const getId = () => {
     let uuid = uuidv4();
@@ -108,8 +109,26 @@ const uploadToAzureCloud = (type, processId, filename, filepath) => {
   })
 }
 
+const mergeVideos = async(id, intro, video, outro) => {
+  let destination = intro.destination;
+  let filenames = [intro.filename, video.filename, outro.filename]
+  // Merge
+  let finalout = await ffmpegUtil.mergeVideos(filenames, destination).catch(err => {
+    console.log(err)
+    throw new Error(`Failed to Merge Video`)
+  });
+  // Upload to Azure
+  let {container, blobname} = await uploadToAzureCloud('video', id, finalout, destination)
+  let videoPublicUrl = await azureUtils.generatePublicURLWithToken(container, blobname)
+  return {
+    video: finalout,
+    videourl: videoPublicUrl
+  };
+}
+
 module.exports = {
     getId,
     fetchVideoThumbnails,
-    processVideos
+    processVideos,
+    mergeVideos
 }
