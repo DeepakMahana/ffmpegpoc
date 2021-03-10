@@ -4,9 +4,6 @@ const path = require('path');
 const os = require('os');
 const ffmpegUtil = require('../utils/ffmpeg');
 const azureUtils = require('../utils/azure');
-const Ffmpeg = require('fluent-ffmpeg');
-const e = require('express');
-const { Console } = require('console');
 
 const getId = () => {
     let uuid = uuidv4();
