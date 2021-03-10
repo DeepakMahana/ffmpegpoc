@@ -77,11 +77,14 @@ const concatVideos = async (req, res) => {
         })
     }
     try {
-        const introVideoFile = await s3Download.downloadVideo(introVideo, videoPath, "intro");
-        const userVideoFile = await s3Download.downloadVideo(userVideo, videoPath, "uservideo");
-        const outroVideoFile = await s3Download.downloadVideo(outroVideo, videoPath, "outro");
+        let promiseArr = [
+                          s3Download.downloadVideo(introVideo, videoPath, "intro"), 
+                          s3Download.downloadVideo(userVideo, videoPath, "uservideo"),
+                          s3Download.downloadVideo(outroVideo, videoPath, "outro")
+                        ]
+        let downloads = await Promise.all(promiseArr).catch(err => { throw new Error(err)});
         console.log('download complete')
-        let finalout = await Editor.mergeVideos(id, introVideoFile, userVideoFile, outroVideoFile)
+        let finalout = await Editor.mergeVideos(id, downloads[0], downloads[1], downloads[2])
         responseUtil(res, true, "merge successfully", false, { finalout })
 
     } catch (err) {

@@ -19,7 +19,7 @@ const downloadVideo = async (video, dest, type) => {
                 response.pipe(file);
             });
             file.on('finish', function(err) {
-                console.log(err)
+                if (err) console.log(err)
                 resolve({
                     destination: dest,
                     filename: filename

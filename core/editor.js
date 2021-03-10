@@ -4,6 +4,7 @@ const path = require('path');
 const os = require('os');
 const ffmpegUtil = require('../utils/ffmpeg');
 const azureUtils = require('../utils/azure');
+const akamaiUtils = require('../utils/akamai');
 
 const getId = () => {
     let uuid = uuidv4();
@@ -111,7 +112,6 @@ const mergeVideos = async(id, intro, video, outro) => {
   let destination = intro.destination;
   let filenames = [intro.filename, video.filename, outro.filename]
   // console.log('filedata', fs.statSync(path.join(intro.destination, intro.filename)));
-
   // Merge
   let finalout = await ffmpegUtil.mergeVideos(filenames, destination).catch(err => {
     console.log(err)
@@ -120,10 +120,38 @@ const mergeVideos = async(id, intro, video, outro) => {
   // Upload to Azure
   let {container, blobname} = await uploadToAzureCloud('video', id, finalout, destination)
   let videoPublicUrl = await azureUtils.generatePublicURLWithToken(container, blobname)
+  // Get Akamai HLS and PD
+  const hlsSource = akamaiUtils.generateVideoHLSURL(blobname);
+  const pdSource = akamaiUtils.generateMediaAssetPublicURL(container, blobname, 24);
+  // Clear all media temp files
+  removeDir(destination)
   return {
     video: finalout,
-    videourl: videoPublicUrl
+    videourl: videoPublicUrl,
+    hlsSource,
+    pdSource
   };
+}
+
+const removeDir = (path) => {
+  if (fs.existsSync(path)) {
+    const files = fs.readdirSync(path)
+
+    if (files.length > 0) {
+      files.forEach(function(filename) {
+        if (fs.statSync(path + "/" + filename).isDirectory()) {
+          removeDir(path + "/" + filename)
+        } else {
+          fs.unlinkSync(path + "/" + filename)
+        }
+      })
+      fs.rmdirSync(path)
+    } else {
+      fs.rmdirSync(path)
+    }
+  } else {
+    console.log("Directory path not found.")
+  }
 }
 
 module.exports = {
