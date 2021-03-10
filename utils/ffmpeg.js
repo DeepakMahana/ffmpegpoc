@@ -43,12 +43,14 @@ const trimVideo = (outputpath, file, starttime, duration) => {
 
 // Merge Videos
 const mergeVideos = async (filesName, outputPath) => {
+  console.log('filenames', filesName, 'dest', outputPath);
     let merged_video = ffmpeg();
     let finalOutputFile = `finalout_${new Date().valueOf()}.mp4`
     let finalOutputPath = path.join(outputPath, finalOutputFile);
     let inputTsFiles = [];
     for(let video of filesName){
         let fullPath = path.join(outputPath, video);
+        console.log('fullpath', fullPath);
         let tmpFile = fullPath.split('.').slice(0, -1).join('.') + ".ts";
         let tmpRes = await createTemp(fullPath, tmpFile);
         inputTsFiles.push(tmpRes);

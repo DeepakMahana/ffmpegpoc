@@ -107,8 +107,11 @@ const uploadToAzureCloud = (type, processId, filename, filepath) => {
 }
 
 const mergeVideos = async(id, intro, video, outro) => {
+  console.log('merging videos');
   let destination = intro.destination;
   let filenames = [intro.filename, video.filename, outro.filename]
+  // console.log('filedata', fs.statSync(path.join(intro.destination, intro.filename)));
+
   // Merge
   let finalout = await ffmpegUtil.mergeVideos(filenames, destination).catch(err => {
     console.log(err)
@@ -129,3 +132,8 @@ module.exports = {
     processVideos,
     mergeVideos
 }
+
+
+// https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4
+
+// https://endtest-videos.s3-us-west-2.amazonaws.com/documentation/endtest_data_driven_testing_csv.mp4
