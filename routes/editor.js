@@ -39,4 +39,8 @@ router.post('/mergevideos', async(req, res) => {
     })
 })
 
+router.post('/concatvideos', async (req, res) => {
+    await VideoEditValidator.concatVideos(req, res);
+})
+
 module.exports = router;

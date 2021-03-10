@@ -3,6 +3,7 @@ const os = require('os');
 const fs = require('fs');
 const Editor = require('../core/editor');
 const responseUtil = require('../utils/response');
+const s3Download = require("../utils/s3-download");
 
 const validateCreateVideoID = async(req, res) => {
     try{
@@ -63,9 +64,28 @@ const mergeVideos = async(req, res) => {
     }
 }
 
+const concatVideos = async (req, res) => {
+    const videos = req.body.videos;
+    const introVideo = videos["intro"];
+    const userVideo = videos["userVideo"];
+    const outroVideo = videos["outro"];
+    const id = req.body.postId;
+    const videoPath = path.join(os.tmpdir(), 'videorepo', id);
+    if (!fs.existsSync(videoPath)) {
+        fs.mkdir(videoPath, (err) => {
+            if (err) throw new Error("falied to create directory")
+        })
+    }
+    await s3Download.downloadVideo(introVideo, videoPath, "intro");
+    await s3Download.downloadVideo(userVideo, videoPath, "userVideo");
+    await s3Download.downloadVideo(outroVideo, videoPath, "outro");
+    responseUtil(res, true, "videos downloaded", false, {})
+}
+
 module.exports = {
     validateCreateVideoID,
     getVideoThumbnails,
     getFinalVideo,
-    mergeVideos
+    mergeVideos,
+    concatVideos
 }
